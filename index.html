@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Be My Valentine?</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Pacifico&display=swap');
+
+        :root {
+            --primary: #ff4d6d;
+            --secondary: #ff8fa3;
+            --bg-color: #ffe5ec;
+            --text-color: #590d22;
+            --white: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            flex-direction: column;
+            text-align: center;
+            background: radial-gradient(circle at center, #fff0f3, #ffe5ec);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(255, 77, 109, 0.15);
+            max-width: 90%;
+            width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: all 0.5s ease;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-family: 'Pacifico', cursive;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.5);
+        }
+
+        .gif-container {
+            margin-bottom: 2rem;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
+        .gif-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 20px;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.1));
+        }
+
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            height: 100px;
+            /* Fixing height to handle growth */
+            position: relative;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 15px rgba(255, 77, 109, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+
+        .btn-yes {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-yes:hover {
+            transform: scale(1.05);
+            background-color: #ff2a55;
+            box-shadow: 0 8px 20px rgba(255, 77, 109, 0.4);
+        }
+
+        .btn-no {
+            background-color: var(--white);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-no:hover {
+            background-color: #fff0f3;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Floating Hearts Animation */
+        .hearts-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 20px;
+            color: rgba(255, 77, 109, 0.4);
+            animation: float 6s linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(105vh) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Sad button style */
+        .btn-breakup {
+            background-color: #a8a8a8;
+            color: white;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            padding: 8px 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hearts-bg" id="heartsBg"></div>
+
+    <div class="container">
+        <div class="gif-container" id="gifContainer">
+            <img id="mainGif" src="happy spongebob squarepants GIF.gif" alt="Cute GIF">
+        </div>
+
+        <h1 id="mainText">Do you wanna be my girlfriend?</h1>
+
+        <div class="buttons" id="btnContainer">
+            <button class="btn-yes" id="yesBtn" onclick="handleYes()">Yes</button>
+            <button class="btn-no" id="noBtn" onclick="handleNo()">No</button>
+        </div>
+    </div>
+
+    <script>
+        // Assets
+        const gifs = {
+            start: 'happy spongebob squarepants GIF.gif',
+            successMulti1: 'Spongebob Squarepants Love GIF.gif',
+            successMulti2: 'Cat Love GIF by NGcorpvtc.gif',
+            sad: 'Miss U Spongebob Squarepants GIF.gif'
+        };
+
+        // State
+        let state = 0; // 0: Start, 1: Confirm 1, 2: Confirm 2, 3: Success, 4: End
+        let noClicks = 0;
+        const messages = [
+            "Do you wanna be my girlfriend?", // 0
+            "Really? 🥺",                     // 1
+            "Really Really? ❤️",              // 2
+            "Yay! I love you! 😻",            // 3
+            "Okay... 💔"                      // 4
+        ];
+
+        // Elements
+        const mainGif = document.getElementById('mainGif');
+        const mainText = document.getElementById('mainText');
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const btnContainer = document.getElementById('btnContainer');
+
+        function handleNo() {
+            noClicks++;
+            const maxClicks = 5;
+
+            // Grow Yes button
+            const currentSize = parseFloat(window.getComputedStyle(yesBtn).fontSize);
+            const currentPadding = parseFloat(window.getComputedStyle(yesBtn).paddingTop);
+
+            yesBtn.style.fontSize = `${currentSize * 1.3}px`;
+            yesBtn.style.padding = `${currentPadding * 1.2}px ${currentPadding * 2 * 1.2}px`;
+
+            // Shrink/Move No button
+            if (noClicks < maxClicks) {
+                // Random partial move to make it harder
+                const x = (Math.random() - 0.5) * 50;
+                const y = (Math.random() - 0.5) * 50;
+                noBtn.style.transform = `translate(${x}px, ${y}px) scale(${1 - noClicks * 0.15})`;
+                noBtn.innerText = ["No?", "Sure?", "Pls?", "Nooo!", "Stop!"][noClicks - 1] || "No";
+            } else {
+                noBtn.style.display = 'none';
+                yesBtn.style.width = '100%';
+                yesBtn.style.height = '100%';
+                yesBtn.style.fontSize = '2rem';
+                yesBtn.innerText = "YES 🥰";
+            }
+        }
+
+        function handleYes() {
+            if (state === 0) {
+                // To Confirm 1
+                state = 1;
+                updateView(state);
+            } else if (state === 1) {
+                // To Confirm 2
+                state = 2;
+                updateView(state);
+            } else if (state === 2) {
+                // To Success
+                state = 3;
+                updateView(state);
+                playSuccessSequence();
+            }
+        }
+
+        function handleBreakup() {
+            state = 4;
+            updateView(state);
+        }
+
+        function updateView(currentState) {
+            mainText.innerText = messages[currentState];
+
+            if (currentState === 1 || currentState === 2) {
+                // Confirm phases: Hide No button, Reset Yes button styles if it was huge
+                noBtn.style.display = 'none';
+                yesBtn.style.fontSize = '1.1rem';
+                yesBtn.style.padding = '12px 30px';
+                yesBtn.style.width = 'auto';
+                yesBtn.style.height = 'auto';
+                yesBtn.innerText = "Yes";
+                // Keep the same gif or maybe change expression? User didn't specify, keeping start gif for now or we could freeze it.
+                // Actually user request: "jika yes( langsung) maka muncul pertanyaan ke dua yaitu reeally (dengan tombol yes (hanya yes)) sampai 2x" -> No specific gif mentioned for these steps.
+                // Keeping start gif is safest.
+            } else if (currentState === 3) {
+                // Success
+                yesBtn.style.display = 'none';
+                noBtn.style.display = 'none';
+
+                // Add Breakup button
+                const breakupBtn = document.createElement('button');
+                breakupBtn.innerText = "Putus 😢";
+                breakupBtn.className = 'btn-breakup';
+                breakupBtn.onclick = handleBreakup;
+                btnContainer.appendChild(breakupBtn);
+
+            } else if (currentState === 4) {
+                // Sad Ending
+                mainGif.src = gifs.sad;
+                btnContainer.innerHTML = ''; // Remove all buttons
+                createHearts(0); // Stop hearts
+            }
+        }
+
+        function playSuccessSequence() {
+            mainGif.src = gifs.successMulti1;
+            createHearts(50); // Burst of hearts
+
+            setTimeout(() => {
+                if (state === 3) { // Only if still in success state
+                    mainGif.src = gifs.successMulti2;
+                }
+            }, 3000);
+        }
+
+        // Background Hearts
+        function createHearts(count) {
+            const container = document.getElementById('heartsBg');
+            // If count 0, clear
+            if (count === 0) {
+                // container.innerHTML = ''; // Optional: don't clear if we want them to float away naturally
+                return;
+            }
+
+            for (let i = 0; i < 20; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.innerHTML = ['❤️', '💖', '💝', '💕'][Math.floor(Math.random() * 4)];
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.animationDuration = Math.random() * 3 + 3 + 's'; // 3-6s
+                heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+                container.appendChild(heart);
+            }
+        }
+
+        // Initial hearts
+        setInterval(() => createHearts(), 1000);
+
+    </script>
+</body>
+
+</html>
